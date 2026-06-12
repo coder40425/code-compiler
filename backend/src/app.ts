@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import projectRoutes from "./routes/project.routes";
 import versionRoutes from "./routes/version.routes";
+import executionRoutes from "./routes/execution.routes";
 
 const app = express();
 
@@ -10,6 +11,7 @@ app.use(express.json());
 
 app.use("/api/projects", projectRoutes);
 app.use("/api/versions", versionRoutes);
+app.use("/api/execute", executionRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
