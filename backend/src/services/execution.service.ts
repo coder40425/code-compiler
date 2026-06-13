@@ -24,7 +24,7 @@ export const enqueueJob = async (job: ExecutionJob) => {
       await subscriber.unsubscribe(`result:${job.jobId}`);
       await subscriber.quit();
       reject(new Error("Execution timed out"));
-    }, 30000);
+    }, 60000);
 
     await subscriber.subscribe(
       `result:${job.jobId}`,
