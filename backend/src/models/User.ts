@@ -1,10 +1,15 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IUser extends Document {
-  lmsUserId: string;
-  name: string;
-  email: string;
-  role: string;
+  lmsUserId: String,   // optional for future LMS
+  googleId: String,
+  name: String,
+  email: String,
+  avatar: String,
+  role: {
+    type: String,
+    default: "student"
+  }
   createdAt: Date;
 }
 
@@ -14,6 +19,15 @@ const UserSchema = new Schema<IUser>(
       type: String,
       required: true,
       unique: true,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    avatar: {
+      type: String,
+      default: "",
     },
     name: {
       type: String,
