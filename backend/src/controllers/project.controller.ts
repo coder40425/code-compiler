@@ -43,11 +43,8 @@ export const getProjectById = async (
   res: Response
 ) => {
   try {
-    const project =
-      await projectService.getProjectById(
-        req.params.id,
-        req.userId!
-      );
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const project = await projectService.getProjectById(id, req.userId!);
 
     if (!project) {
       return res.status(404).json({
@@ -68,12 +65,8 @@ export const updateProject = async (
   res: Response
 ) => {
   try {
-    const project =
-      await projectService.updateProject(
-        req.params.id,
-        req.userId!,
-        req.body
-      );
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const project = await projectService.updateProject(id, req.userId!, req.body);
 
     if (!project) {
       return res.status(404).json({
@@ -94,11 +87,8 @@ export const deleteProject = async (
   res: Response
 ) => {
   try {
-    const project =
-      await projectService.deleteProject(
-        req.params.id,
-        req.userId!
-      );
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const project = await projectService.deleteProject(id, req.userId!);
 
     if (!project) {
       return res.status(404).json({

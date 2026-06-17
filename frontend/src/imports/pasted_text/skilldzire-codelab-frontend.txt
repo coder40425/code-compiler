@@ -1,0 +1,453 @@
+Generate Frontend for SkillDzire Online Compiler
+
+Build a modern, production-ready, responsive frontend for an Online Code Compiler & Mini IDE called "SkillDzire CodeLab". The compiler is part of the SkillDzire learning ecosystem, so the design should match the official SkillDzire website branding and colors.
+
+🎨 Design Language
+
+Use the official SkillDzire website as inspiration:
+
+Primary Color: #F4430B (SkillDzire Orange)
+Secondary Accent: #FF6B35
+Dark Background: #111111
+Dark Surface: #1A1A1A
+Border: #2A2A2A
+Text Primary: #FFFFFF
+Text Secondary: #B3B3B3
+Success: #22C55E
+Error: #EF4444
+Warning: #F59E0B
+Info: #3B82F6
+
+Theme:
+
+Modern developer dashboard.
+Minimalistic and clean.
+Soft rounded corners (12px).
+Subtle shadows.
+Responsive for desktop, tablet, and mobile.
+Professional educational platform look, not hacker-style neon.
+
+Typography:
+
+Inter / Poppins / Geist.
+Large bold headers.
+Clean monospace font (JetBrains Mono or Fira Code) inside code editor/output.
+🏗️ Tech Stack Assumptions
+
+Generate the frontend assuming:
+
+React + TypeScript
+Vite
+TailwindCSS
+React Router DOM
+Axios
+Monaco Editor (@monaco-editor/react)
+React Hot Toast or Sonner for notifications.
+Lucide React icons.
+Framer Motion for subtle animations.
+Context API (no Redux required).
+
+The generated code should be componentized and production-ready.
+
+📁 Generate Complete Frontend Folder Structure
+
+Generate code and components for this structure:
+
+frontend/
+│
+├── src/
+│   ├── api/
+│   │   ├── axios.ts
+│   │   ├── projectApi.ts
+│   │   ├── versionApi.ts
+│   │   ├── executionApi.ts
+│   │   └── executionHistoryApi.ts
+│   │
+│   ├── assets/
+│   ├── components/
+│   │   ├── Navbar.tsx
+│   │   ├── Sidebar.tsx
+│   │   ├── EditorPanel.tsx
+│   │   ├── LanguageSelector.tsx
+│   │   ├── OutputPanel.tsx
+│   │   ├── InputPanel.tsx
+│   │   ├── ProjectCard.tsx
+│   │   ├── VersionTimeline.tsx
+│   │   ├── ExecutionHistoryTable.tsx
+│   │   ├── LoadingOverlay.tsx
+│   │   ├── StatusBadge.tsx
+│   │   └── EmptyState.tsx
+│   │
+│   ├── pages/
+│   │   ├── Dashboard.tsx
+│   │   ├── Compiler.tsx
+│   │   ├── Projects.tsx
+│   │   ├── ProjectDetail.tsx
+│   │   ├── ExecutionHistory.tsx
+│   │   └── NotFound.tsx
+│   │
+│   ├── context/
+│   │   └── CompilerContext.tsx
+│   │
+│   ├── hooks/
+│   │   ├── useExecution.ts
+│   │   └── useProjects.ts
+│   │
+│   ├── types/
+│   │   ├── project.ts
+│   │   ├── version.ts
+│   │   └── execution.ts
+│   │
+│   ├── layouts/
+│   │   └── MainLayout.tsx
+│   │
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+│
+└── package.json
+🌐 Backend Integration (Very Important)
+
+Design the frontend around these existing backend APIs.
+
+Health Check
+GET /api/health
+Projects
+POST   /api/projects
+GET    /api/projects
+GET    /api/projects/:id
+PUT    /api/projects/:id
+DELETE /api/projects/:id
+
+Project object:
+
+{
+  _id: string;
+  title: string;
+  language: string;
+  currentCode: string;
+  createdAt: string;
+}
+Versions
+POST /api/versions/:projectId
+GET  /api/versions/:projectId
+GET  /api/versions/single/:versionId
+POST /api/projects/:projectId/restore/:versionId
+
+Version object:
+
+{
+  _id: string;
+  projectId: string;
+  versionNumber: number;
+  code: string;
+  createdAt: string;
+}
+Execute Code
+Endpoint
+POST /api/execute
+Request
+{
+  "language": "python",
+  "code": "print('Hello')",
+  "stdin": ""
+}
+Response
+{
+  "success": true,
+  "jobId": "...",
+  "language": "python",
+  "stdout": "Hello\n",
+  "stderr": "",
+  "executionTime": 1150,
+  "status": "completed"
+}
+
+Possible status values:
+
+completed
+runtime_error
+compile_error
+timeout
+Execution History
+GET /api/executions
+GET /api/executions/:jobId
+GET /api/executions/project/:projectId
+GET /api/executions/user/:userId
+
+Execution History object:
+
+{
+  _id: string;
+  jobId: string;
+  language: string;
+  code: string;
+  stdin: string;
+  stdout: string;
+  stderr: string;
+  executionTime: number;
+  status: string;
+  createdAt: string;
+}
+
+The frontend should already map directly to these APIs without requiring backend changes.
+
+🏠 Dashboard Page
+
+Create a beautiful dashboard showing:
+
+Hero Section
+"Welcome to SkillDzire CodeLab"
+
+Subtitle:
+
+Practice, Build, Compile and Learn with a secure multi-language cloud IDE.
+
+Stats Cards
+Total Projects
+Total Executions
+Languages Supported
+Latest Execution Time
+Quick Actions
+New Project
+Open Compiler
+View History
+Recent Projects List
+
+Display last few projects as cards.
+
+Recent Executions
+
+Show recent execution history table.
+
+💻 Compiler Page (Main Feature)
+
+Create a VSCode-inspired but simplified interface.
+
+Layout
+
+Desktop:
+
+--------------------------------------------------------
+Navbar
+--------------------------------------------------------
+Sidebar |          Monaco Code Editor                 |
+        |---------------------------------------------|
+        |                Input Panel                  |
+--------------------------------------------------------
+                Output Panel
+--------------------------------------------------------
+
+Mobile:
+
+Stack panels vertically.
+Editor first, input second, output third.
+Top Toolbar
+
+Include:
+
+Project Name input.
+Language dropdown.
+Save Project button.
+Save Version button.
+Run Code button (large orange CTA).
+Execution Status indicator.
+Language Dropdown
+
+Support these languages:
+
+Display Name	Value
+Python	python
+JavaScript	javascript
+C	c
+C++	cpp
+Java	java
+Go	go
+PHP	php
+Ruby	ruby
+C#	csharp
+Kotlin	kotlin
+
+Show small language icons where possible.
+
+Monaco Editor
+
+Features:
+
+Dark theme.
+Syntax highlighting.
+Auto resize.
+Minimap optional.
+Font: JetBrains Mono.
+Default starter code changes automatically based on selected language.
+
+Example templates:
+
+Python:
+
+print("Hello SkillDzire")
+
+JavaScript:
+
+console.log("Hello SkillDzire");
+
+C:
+
+#include <stdio.h>
+
+int main() {
+    printf("Hello SkillDzire");
+    return 0;
+}
+
+Java:
+
+public class Main {
+    public static void main(String[] args){
+        System.out.println("Hello SkillDzire");
+    }
+}
+Input Panel
+
+Simple textarea labeled:
+Custom Input (stdin)
+
+Placeholder:
+
+Enter input for your program...
+Output Panel
+
+Display:
+
+Stdout
+Stderr
+Status badge
+Execution Time
+
+Use tabs:
+
+Output
+Errors
+Details
+
+Details tab displays:
+
+Job ID
+Language
+Execution Time
+Status
+
+Status badges:
+
+Green = completed
+Red = runtime_error
+Orange = compile_error
+Yellow = timeout
+📂 Projects Page
+
+Grid of project cards.
+
+Each card contains:
+
+Project Name
+Language badge
+Last Updated
+Buttons:
+Open
+Edit
+Delete
+
+Floating "New Project" button.
+
+📜 Project Detail Page
+
+Display:
+
+Project metadata.
+Current code preview.
+Version timeline.
+Restore Version button.
+Open in Compiler button.
+🕒 Execution History Page
+
+Table view with:
+
+Language
+Status
+Execution Time
+Created At
+Job ID (truncated)
+
+Clicking a row opens a modal showing:
+
+Source code.
+stdin.
+stdout.
+stderr.
+Execution metadata.
+
+Include:
+
+Search.
+Filter by language.
+Filter by status.
+Sort by latest.
+🧩 Reusable Components
+
+Create reusable components:
+
+Button
+Card
+Badge
+Modal
+Confirm Dialog
+Loading Spinner
+Toast Notifications
+Empty State
+Skeleton Loader
+📱 Responsiveness
+
+Desktop:
+
+Full dashboard layout.
+
+Tablet:
+
+Sidebar collapses.
+Panels resize intelligently.
+
+Mobile:
+
+Hamburger menu.
+Stacked editor/input/output.
+Full-width buttons.
+Tables become cards.
+⚡ User Experience
+Loading spinner while executing.
+Disable Run button while waiting.
+Toast notification on success/error.
+Smooth page transitions.
+Preserve editor state when navigating.
+Auto-save editor content locally.
+Dark mode by default.
+🔌 API Layer
+
+Generate Axios wrappers.
+
+Example:
+
+POST /api/execute
+GET  /api/projects
+POST /api/projects
+GET  /api/executions
+GET  /api/versions/:projectId
+
+Create reusable service functions rather than calling Axios directly inside components.
+
+🚫 Authentication
+
+Do NOT generate login, signup, JWT, Google OAuth, or authentication pages. This compiler will later be embedded into the SkillDzire LMS and authentication will be handled externally.
+
+🎯 Goal
+
+Generate a fully functional, responsive, component-based frontend folder that can connect to the existing backend with little or no modification. Focus on maintainability, clean architecture, API compatibility, and a polished educational developer experience that feels like an official SkillDzire product rather than a generic online compiler.
