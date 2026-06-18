@@ -1,6 +1,16 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { Code2, Menu, X, Terminal, FolderOpen, Clock, LayoutDashboard, LogOut, User, ChevronDown } from "lucide-react";
+import {
+  Menu,
+  X,
+  Terminal,
+  FolderOpen,
+  Clock,
+  LayoutDashboard,
+  LogOut,
+  User,
+  ChevronDown,
+} from "lucide-react";
 import { useAuth } from "../AuthContext";
 
 const NAV_LINKS = [
@@ -18,7 +28,8 @@ function UserMenu() {
 
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -36,35 +47,61 @@ function UserMenu() {
           src={user.avatar}
           alt={user.name}
           className="w-7 h-7 rounded-full object-cover bg-primary/20"
-          onError={(e) => { (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name)}&backgroundColor=f4430b&textColor=ffffff`; }}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
+              user.name
+            )}&backgroundColor=f4430b&textColor=ffffff`;
+          }}
         />
-        <span className="hidden md:block text-sm font-medium text-foreground max-w-28 truncate">{user.name}</span>
-        <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+        <span className="hidden md:block text-sm font-medium text-foreground max-w-28 truncate">
+          {user.name}
+        </span>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+        />
       </button>
 
       {open && (
         <div className="absolute right-0 top-full mt-2 w-52 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden">
           <div className="px-3 py-3 border-b border-border">
-            <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            <p className="text-sm font-semibold text-foreground truncate">
+              {user.name}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              {user.email}
+            </p>
           </div>
           <div className="py-1">
             <button
-              onClick={() => { navigate("/projects"); setOpen(false); }}
+              onClick={() => {
+                navigate("/projects");
+                setOpen(false);
+              }}
               className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
             >
-              <FolderOpen className="w-4 h-4 text-muted-foreground" /> My Projects
+              <FolderOpen className="w-4 h-4 text-muted-foreground" /> My
+              Projects
             </button>
             <button
-              onClick={() => { navigate("/history"); setOpen(false); }}
+              onClick={() => {
+                navigate("/history");
+                setOpen(false);
+              }}
               className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
             >
-              <Clock className="w-4 h-4 text-muted-foreground" /> Execution History
+              <Clock className="w-4 h-4 text-muted-foreground" /> Execution
+              History
             </button>
           </div>
           <div className="border-t border-border py-1">
             <button
-              onClick={() => { logout(); navigate("/"); setOpen(false); }}
+              onClick={() => {
+                logout();
+                navigate("/");
+                setOpen(false);
+              }}
               className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
             >
               <LogOut className="w-4 h-4" /> Sign Out
@@ -82,19 +119,28 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
-  const isActive = (href: string) => pathname === href || (href === "/dashboard" && pathname === "/");
+  const isActive = (href: string) =>
+    pathname === href || (href === "/dashboard" && pathname === "/");
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-[#111111]/95 backdrop-blur-sm">
       <div className="flex items-center justify-between h-14 px-4 md:px-6">
-        {/* Logo */}
+        {/* Logo — replaced Code2 icon with real SkillDzire logo */}
         <Link to="/" className="flex items-center gap-2.5 shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Code2 className="w-4 h-4 text-white" />
-          </div>
+          <img
+            src="https://skilldzire.com/images/logo-skilldzire.png"
+            alt="SkillDzire"
+            className="h-8 w-auto object-contain"
+            onError={(e) => {
+              // Fallback: hide broken image, show text only
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
           <div className="leading-none">
             <span className="font-bold text-white text-sm">SkillDzire</span>
-            <span className="block text-[10px] text-muted-foreground font-mono tracking-wider">CodeLab</span>
+            <span className="block text-[10px] text-muted-foreground font-mono tracking-wider">
+              CodeLab
+            </span>
           </div>
         </Link>
 
