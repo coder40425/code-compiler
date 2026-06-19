@@ -1,6 +1,6 @@
 export interface Project {
   _id: string;
-  userId: string;        // present on every backend response — was missing
+  userId: string;
   title: string;
   language: string;
   currentCode: string;
@@ -35,6 +35,9 @@ export interface ExecuteRequest {
   language: string;
   code: string;
   stdin: string;
+  // FIX: userId must be sent so the backend can attach it to the
+  // ExecutionHistory document. Without it, user-scoped history is always empty.
+  userId?: string;
 }
 
 export interface ExecuteResponse {

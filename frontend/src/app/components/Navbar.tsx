@@ -10,14 +10,15 @@ import {
   LogOut,
   User,
   ChevronDown,
+  Home,
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-  { href: "/compiler", label: "Compiler", icon: Terminal },
-  { href: "/projects", label: "Projects", icon: FolderOpen },
-  { href: "/history", label: "History", icon: Clock },
+  { href: "/compiler",  label: "Compiler", icon: Terminal },
+  { href: "/projects",  label: "Projects", icon: FolderOpen },
+  { href: "/history",   label: "History", icon: Clock },
 ];
 
 function UserMenu() {
@@ -75,33 +76,21 @@ function UserMenu() {
           </div>
           <div className="py-1">
             <button
-              onClick={() => {
-                navigate("/projects");
-                setOpen(false);
-              }}
+              onClick={() => { navigate("/projects"); setOpen(false); }}
               className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
             >
-              <FolderOpen className="w-4 h-4 text-muted-foreground" /> My
-              Projects
+              <FolderOpen className="w-4 h-4 text-muted-foreground" /> My Projects
             </button>
             <button
-              onClick={() => {
-                navigate("/history");
-                setOpen(false);
-              }}
+              onClick={() => { navigate("/history"); setOpen(false); }}
               className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
             >
-              <Clock className="w-4 h-4 text-muted-foreground" /> Execution
-              History
+              <Clock className="w-4 h-4 text-muted-foreground" /> Execution History
             </button>
           </div>
           <div className="border-t border-border py-1">
             <button
-              onClick={() => {
-                logout();
-                navigate("/");
-                setOpen(false);
-              }}
+              onClick={() => { logout(); navigate("/"); setOpen(false); }}
               className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
             >
               <LogOut className="w-4 h-4" /> Sign Out
@@ -122,17 +111,22 @@ export default function Navbar() {
   const isActive = (href: string) =>
     pathname === href || (href === "/dashboard" && pathname === "/");
 
+  // FIX 2: on /compiler show "Back to Home" → /dashboard
+  //         everywhere else show "Run Code" → /compiler
+  const onCompilerPage = pathname === "/compiler";
+
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-[#111111]/95 backdrop-blur-sm">
+    // FIX 1: lightened bg so the SkillDzire logo (dark image) is visible
+    <header className="sticky top-0 z-50 border-b border-border bg-[#2a2a2a]/98 backdrop-blur-sm">
       <div className="flex items-center justify-between h-14 px-4 md:px-6">
-        {/* Logo — replaced Code2 icon with real SkillDzire logo */}
+
+        {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 shrink-0">
           <img
             src="https://skilldzire.com/images/logo-skilldzire.png"
             alt="SkillDzire"
             className="h-8 w-auto object-contain"
             onError={(e) => {
-              // Fallback: hide broken image, show text only
               (e.target as HTMLImageElement).style.display = "none";
             }}
           />
@@ -144,7 +138,7 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Desktop nav — only show when authenticated */}
+        {/* Desktop nav — only when authenticated */}
         {isAuthenticated && (
           <nav className="hidden md:flex items-center gap-1">
             {NAV_LINKS.map(({ href, label, icon: Icon }) => (
@@ -168,13 +162,24 @@ export default function Navbar() {
         <div className="flex items-center gap-2">
           {isAuthenticated ? (
             <>
-              <Link
-                to="/compiler"
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors"
-              >
-                <Terminal className="w-3.5 h-3.5" />
-                Run Code
-              </Link>
+              {/* FIX 2: toggle between "Back to Home" and "Run Code" */}
+              {onCompilerPage ? (
+                <button
+                  onClick={() => navigate("/dashboard")}
+                  className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted border border-border text-foreground rounded-lg text-sm font-semibold hover:bg-secondary transition-colors"
+                >
+                  <Home className="w-3.5 h-3.5" />
+                  Back to Home
+                </button>
+              ) : (
+                <Link
+                  to="/compiler"
+                  className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors"
+                >
+                  <Terminal className="w-3.5 h-3.5" />
+                  Run Code
+                </Link>
+              )}
               <UserMenu />
             </>
           ) : (
@@ -194,6 +199,7 @@ export default function Navbar() {
               </button>
             </>
           )}
+
           {/* Mobile hamburger — only when authenticated */}
           {isAuthenticated && (
             <button
