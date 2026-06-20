@@ -57,20 +57,18 @@ export const getVersion = async (versionId: string): Promise<Version> => {
   return data;
 };
 
-// FIX: was POST /versions/:projectId — correct route is /versions/:projectId/save
-export const createVersion = async (
-  projectId: string,
-  code: string
-): Promise<Version> => {
+// Backend version.service reads currentCode directly from the Project document.
+// It does NOT accept a { code } body. Correct flow:
+// 1. updateProject (push editor code to DB)
+// 2. createVersion (backend snapshots project.currentCode)
+export const createVersion = async (projectId: string): Promise<Version> => {
   const { data } = await axiosInstance.post<Version>(
-    `/api/versions/${projectId}/save`,
-    { code }
+    `/api/versions/${projectId}/save`
+    // no body — backend reads project.currentCode from MongoDB
   );
   return data;
 };
 
-// FIX: was POST /projects/:projectId/restore/:versionId
-//      correct route is POST /versions/:projectId/restore/:versionId
 export const restoreVersion = async (
   projectId: string,
   versionId: string
@@ -100,9 +98,13 @@ export const getExecutions = async (): Promise<Execution[]> => {
   return data;
 };
 
+// FIX: was GET /api/executions/${jobId}
+//      backend route is GET /executions/job/:jobId — missing the /job/ segment.
+//      Without it, Express matches the jobId value against /project/:id or
+//      /user/:id and returns 404.
 export const getExecution = async (jobId: string): Promise<Execution> => {
   const { data } = await axiosInstance.get<Execution>(
-    `/api/executions/${jobId}`
+    `/api/executions/job/${jobId}`
   );
   return data;
 };
@@ -116,7 +118,6 @@ export const getProjectExecutions = async (
   return data;
 };
 
-// NEW: was missing — backend has GET /api/executions/user/:userId
 export const getUserExecutions = async (
   userId: string
 ): Promise<Execution[]> => {

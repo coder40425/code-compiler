@@ -2,15 +2,17 @@ import { createClient } from "redis";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 
-import { executePython } from "./executors/python";
+import { executePython }     from "./executors/python";
 import { executeJavaScript } from "./executors/javascript";
-import { executeC } from "./executors/c";
-import { executeCpp } from "./executors/cpp";
-import { executeJava } from "./executors/java";
-import { executeGo } from "./executors/go";
-import { executePHP } from "./executors/php";
-import { executeRuby } from "./executors/ruby";
-import { ExecutionHistory } from "./models/ExecutionHistory";
+import { executeC }          from "./executors/c";
+import { executeCpp }        from "./executors/cpp";
+import { executeJava }       from "./executors/java";
+import { executeGo }         from "./executors/go";
+import { executePHP }        from "./executors/php";
+import { executeRuby }       from "./executors/ruby";
+import { executeKotlin }     from "./executors/kotlin";
+import { executeCSharp }     from "./executors/csharp";
+import { ExecutionHistory }  from "./models/ExecutionHistory";
 
 dotenv.config();
 
@@ -24,37 +26,27 @@ redisClient.on("error", (err) => {
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-/**
- * Derive a human-readable execution status from the executor output.
- * Mirrors the logic specified in Part 4 of the task.
- */
 function deriveStatus(
   timedOut: boolean | undefined,
   stderr: string
 ): string {
-  if (timedOut) {
-    return "timeout";
-  }
-
+  if (timedOut) return "timeout";
   if (stderr) {
     if (
       stderr.includes("error:") ||
       stderr.includes("SyntaxError") ||
-      stderr.includes("Compilation failed")
+      stderr.includes("Compilation failed") ||
+      stderr.includes("error CS") ||      // C# Roslyn errors
+      stderr.includes("error:") ||
+      stderr.includes("Exception in thread") // Kotlin/Java
     ) {
       return "compile_error";
     }
     return "runtime_error";
   }
-
   return "completed";
 }
 
-/**
- * Persist an execution record to MongoDB.
- * Failures are logged but never propagate — the caller must not await this
- * before publishing the Redis result.
- */
 async function saveHistory(payload: {
   jobId: string;
   language: string;
@@ -69,23 +61,18 @@ async function saveHistory(payload: {
 }): Promise<void> {
   try {
     await ExecutionHistory.create({
-      jobId: payload.jobId,
-      language: payload.language,
-      code: payload.code,
-      stdin: payload.stdin,
-      stdout: payload.stdout,
-      stderr: payload.stderr,
-      status: payload.status,
+      jobId:         payload.jobId,
+      language:      payload.language,
+      code:          payload.code,
+      stdin:         payload.stdin,
+      stdout:        payload.stdout,
+      stderr:        payload.stderr,
+      status:        payload.status,
       executionTime: payload.executionTime,
-      ...(payload.userId && {
-        userId: new mongoose.Types.ObjectId(payload.userId),
-      }),
-      ...(payload.projectId && {
-        projectId: new mongoose.Types.ObjectId(payload.projectId),
-      }),
+      ...(payload.userId    && { userId:    payload.userId }),
+      ...(payload.projectId && { projectId: new mongoose.Types.ObjectId(payload.projectId) }),
     });
   } catch (err) {
-    // Never crash the worker — just log.
     console.error("⚠️  Failed to save execution history:", err);
   }
 }
@@ -96,7 +83,6 @@ const startWorker = async () => {
   await redisClient.connect();
   console.log("🚀 Worker connected to Redis");
 
-  // Connect to MongoDB (non-blocking — history will fail gracefully if down)
   const mongoUri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/compiler";
   mongoose
     .connect(mongoUri)
@@ -105,7 +91,6 @@ const startWorker = async () => {
 
   while (true) {
     const result = await redisClient.brPop("execution_queue", 0);
-
     if (!result) continue;
 
     const job = JSON.parse(result.element);
@@ -165,6 +150,18 @@ const startWorker = async () => {
         console.log("💎 Ruby Execution Result:");
         break;
 
+      // FIX: Kotlin and C# were imported but never wired into the switch
+      case "kotlin":
+        output = await executeKotlin(job.code, job.stdin || "");
+        console.log("🎯 Kotlin Execution Result:");
+        break;
+
+      case "csharp":
+      case "c#":
+        output = await executeCSharp(job.code, job.stdin || "");
+        console.log("🔷 C# Execution Result:");
+        break;
+
       default:
         output = {
           stdout: "",
@@ -177,31 +174,30 @@ const startWorker = async () => {
 
     const status = deriveStatus(output.timedOut, output.stderr);
 
-    // Publish result — existing channel and shape preserved, new fields added.
     await redisClient.publish(
       `result:${job.jobId}`,
       JSON.stringify({
-        jobId: job.jobId,
-        language: job.language,
-        stdout: output.stdout,
-        stderr: output.stderr,
+        jobId:         job.jobId,
+        language:      job.language,
+        stdout:        output.stdout,
+        stderr:        output.stderr,
         executionTime: output.executionTime,
         status,
       })
     );
 
-    // Persist history without blocking the next job pick-up.
+    // Fire-and-forget — never blocks next job
     saveHistory({
-      jobId: job.jobId,
-      language: job.language,
-      code: job.code,
-      stdin: job.stdin || "",
-      stdout: output.stdout,
-      stderr: output.stderr,
+      jobId:         job.jobId,
+      language:      job.language,
+      code:          job.code,
+      stdin:         job.stdin || "",
+      stdout:        output.stdout,
+      stderr:        output.stderr,
       status,
       executionTime: output.executionTime,
-      userId: job.userId,
-      projectId: job.projectId,
+      userId:        job.userId,
+      projectId:     job.projectId,
     });
   }
 };
