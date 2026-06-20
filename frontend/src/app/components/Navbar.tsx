@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Home,
 } from "lucide-react";
+import { useAuth as useClerkAuth } from "@clerk/clerk-react";
 import { useAuth } from "../AuthContext";
 
 const NAV_LINKS = [
@@ -107,16 +108,46 @@ export default function Navbar() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  // FIX: Navbar read isAuthenticated immediately, which is `false` for a
+  // brief moment on every page load/refresh while Clerk is still restoring
+  // the session from cookies. That caused the visible flicker from
+  // signed-out → signed-in UI. isLoaded lets us hold the PREVIOUS visual
+  // state (or a neutral one) until Clerk has actually confirmed the answer.
+  const { isLoaded } = useClerkAuth();
 
   const isActive = (href: string) =>
     pathname === href || (href === "/dashboard" && pathname === "/");
 
-  // FIX 2: on /compiler show "Back to Home" → /dashboard
-  //         everywhere else show "Run Code" → /compiler
   const onCompilerPage = pathname === "/compiler";
 
+  // While Clerk is determining auth state, render only the logo —
+  // no sign-in/sign-out buttons flashing back and forth.
+  if (!isLoaded) {
+    return (
+      <header className="sticky top-0 z-50 border-b border-border bg-[#2a2a2a]/98 backdrop-blur-sm">
+        <div className="flex items-center justify-between h-14 px-4 md:px-6">
+          <Link to="/" className="flex items-center gap-2.5 shrink-0">
+            <img
+              src="https://skilldzire.com/images/logo-skilldzire.png"
+              alt="SkillDzire"
+              className="h-8 w-auto object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+            <div className="leading-none">
+              <span className="font-bold text-white text-sm">SkillDzire</span>
+              <span className="block text-[10px] text-muted-foreground font-mono tracking-wider">
+                CodeLab
+              </span>
+            </div>
+          </Link>
+        </div>
+      </header>
+    );
+  }
+
   return (
-    // FIX 1: lightened bg so the SkillDzire logo (dark image) is visible
     <header className="sticky top-0 z-50 border-b border-border bg-[#2a2a2a]/98 backdrop-blur-sm">
       <div className="flex items-center justify-between h-14 px-4 md:px-6">
 
@@ -162,7 +193,6 @@ export default function Navbar() {
         <div className="flex items-center gap-2">
           {isAuthenticated ? (
             <>
-              {/* FIX 2: toggle between "Back to Home" and "Run Code" */}
               {onCompilerPage ? (
                 <button
                   onClick={() => navigate("/dashboard")}
