@@ -5,6 +5,10 @@ interface ExecutionJob {
   language: string;
   code: string;
   stdin?: string;
+  // FIX: userId must be part of the job payload so the worker can persist it
+  // on the ExecutionHistory document. Without this field in the interface,
+  // TypeScript strips it and the worker never receives it.
+  userId?: string;
 }
 
 interface ExecutionResult {
@@ -12,10 +16,11 @@ interface ExecutionResult {
   stdout: string;
   stderr: string;
   status: string;
+  executionTime: number;
+  language: string;
 }
 
 export const enqueueJob = async (job: ExecutionJob) => {
-  // Create a duplicate client for subscription.
   const subscriber = redisClient.duplicate();
   await subscriber.connect();
 
@@ -30,17 +35,14 @@ export const enqueueJob = async (job: ExecutionJob) => {
       `result:${job.jobId}`,
       async (message) => {
         clearTimeout(timeout);
-
         const result = JSON.parse(message);
-
         await subscriber.unsubscribe(`result:${job.jobId}`);
         await subscriber.quit();
-
         resolve(result);
       }
     );
 
-    // Push the job after subscription is ready.
+    // Push full job including userId so worker can save it to ExecutionHistory
     await redisClient.lPush(
       "execution_queue",
       JSON.stringify(job)

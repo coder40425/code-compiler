@@ -1,7 +1,10 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IExecutionHistory extends Document {
-  userId?: mongoose.Types.ObjectId;
+  // FIX: userId is a Clerk ID (e.g. "user_3FGUdA37geMSHrNVcjtwgYHYI7Z") —
+  // a plain string, NOT a MongoDB ObjectId. Storing as ObjectId caused
+  // BSONError on save and meant getExecutionsByUser({ userId }) never matched.
+  userId?: string;
   projectId?: mongoose.Types.ObjectId;
   jobId: string;
   language: string;
@@ -16,8 +19,9 @@ export interface IExecutionHistory extends Document {
 
 const ExecutionHistorySchema = new Schema<IExecutionHistory>(
   {
+    // FIX: String, not Schema.Types.ObjectId
     userId: {
-      type: Schema.Types.ObjectId,
+      type: String,
       required: false,
     },
     projectId: {
